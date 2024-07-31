@@ -17,11 +17,21 @@ A_size_arr = [100, 150, 200, 250, 300, 350, 400]
 sigma_arr = [1]
 
 
-def plot_mse(mse: List[Any]) -> None:
-    fig, ax0 = plt.subplots(nrows=1)
-    im = ax0.pcolormesh(mse)
-    fig.colorbar(im, ax=ax0)
-    plt.savefig("initial_sims.png")
+def plot_mse(mse: List[Any], file_name) -> None:
+    fig, ax = plt.subplots()
+    cax = ax.matshow(mse, cmap='viridis')
+    fig.colorbar(cax)
+    
+    ax.set_xticks(np.arange(len(sparsity_arr)))
+    ax.set_xticklabels([str(s) for s in sparsity_arr])
+    ax.set_xlabel('Sparsity')
+
+    ax.set_yticks(np.arange(len(A_size_arr)))
+    ax.set_yticklabels([str(a) for a in A_size_arr])
+    ax.set_ylabel('A Size')
+    
+    plt.title('MSE vs Sparsity and A Size')
+    plt.savefig(file_name)
 
 
 def simulate() -> List[Any]:
@@ -53,7 +63,38 @@ def simulate() -> List[Any]:
     return mse_arr
 
 
+def simulate_without_corrections() -> List[Any]:
+    mse_arr = []
+
+    for i in range(len(A_size_arr)):
+        mse_arr.append([])
+        for j in range(len(sparsity_arr)):
+            y_size = A_size_arr[i]
+            A = np.random.binomial(1, A_probability, (A_size_arr[i], 500))
+            sparsity = sparsity_arr[j]
+            x_true = np.zeros(x_size)
+            num_non_zero = int(sparsity * x_size)
+            non_zero_indices = np.random.choice(x_size, num_non_zero, replace=False)
+            x_true[non_zero_indices] = np.random.uniform(1, 1000, num_non_zero)
+            z_stddev = sigma_arr[0]
+            z_size = y_size
+            z = np.random.normal(z_mean, z_stddev, z_size)
+            y = [np.dot(A[i], x_true)*(1+q)**(z[i]) for i in range(y_size)]
+            y = np.array(y)
+            y_tilda = y/(1+q)**(z_stddev**2/2)
+
+            lasso = Lasso()
+            lasso.fit(A, y)
+            x = lasso.coef_
+
+            mse = np.sqrt(mean_squared_error(x, x_true))/np.linalg.norm(x_true)
+            mse_arr[i].append(mse)
+    return mse_arr
+
 if __name__ == "__main__":
     print("Hi")
     mse = simulate()
-    plot_mse(mse)
+    plot_mse(mse, "initial_sims_with_correction.png")
+    mse = simulate_without_corrections()
+    plot_mse(mse, "initial_sims_without_correction.png")
+
