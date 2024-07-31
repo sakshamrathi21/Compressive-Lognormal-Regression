@@ -14,7 +14,7 @@ q = 1
 z_mean = 0
 sparsity_arr = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.75]
 A_size_arr = [100, 150, 200, 250, 300, 350, 400]
-sigma_arr = [1]
+sigma_arr = [1, 2, 3, 4]
 
 
 def plot_mse(mse: List[Any], file_name) -> None:
@@ -34,7 +34,7 @@ def plot_mse(mse: List[Any], file_name) -> None:
     plt.savefig(file_name)
 
 
-def simulate() -> List[Any]:
+def simulate(sigma) -> List[Any]:
     mse_arr = []
 
     for i in range(len(A_size_arr)):
@@ -47,7 +47,7 @@ def simulate() -> List[Any]:
             num_non_zero = int(sparsity * x_size)
             non_zero_indices = np.random.choice(x_size, num_non_zero, replace=False)
             x_true[non_zero_indices] = np.random.uniform(1, 1000, num_non_zero)
-            z_stddev = sigma_arr[0]
+            z_stddev = sigma
             z_size = y_size
             z = np.random.normal(z_mean, z_stddev, z_size)
             y = [np.dot(A[i], x_true)*(1+q)**(z[i]) for i in range(y_size)]
@@ -63,7 +63,7 @@ def simulate() -> List[Any]:
     return mse_arr
 
 
-def simulate_without_corrections() -> List[Any]:
+def simulate_without_corrections(sigma) -> List[Any]:
     mse_arr = []
 
     for i in range(len(A_size_arr)):
@@ -76,7 +76,7 @@ def simulate_without_corrections() -> List[Any]:
             num_non_zero = int(sparsity * x_size)
             non_zero_indices = np.random.choice(x_size, num_non_zero, replace=False)
             x_true[non_zero_indices] = np.random.uniform(1, 1000, num_non_zero)
-            z_stddev = sigma_arr[0]
+            z_stddev = sigma
             z_size = y_size
             z = np.random.normal(z_mean, z_stddev, z_size)
             y = [np.dot(A[i], x_true)*(1+q)**(z[i]) for i in range(y_size)]
@@ -93,8 +93,9 @@ def simulate_without_corrections() -> List[Any]:
 
 if __name__ == "__main__":
     print("Hi")
-    mse = simulate()
-    plot_mse(mse, "initial_sims_with_correction.png")
-    mse = simulate_without_corrections()
-    plot_mse(mse, "initial_sims_without_correction.png")
+    for sigma in sigma_arr:
+        mse = simulate(sigma)
+        plot_mse(mse, f"initial_sims_with_correction_{sigma}.png")
+        mse = simulate_without_corrections(sigma)
+        plot_mse(mse, f"initial_sims_without_correction_{sigma}.png")
 
