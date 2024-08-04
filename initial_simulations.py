@@ -14,7 +14,7 @@ q = 1
 z_mean = 0
 sparsity_arr = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.75]
 A_size_arr = [100, 150, 200, 250, 300, 350, 400]
-sigma_arr = [1, 2, 3, 4]
+sigma_arr = [4]
 
 
 def plot_mse(mse: List[Any], file_name) -> None:
@@ -58,6 +58,10 @@ def simulate(sigma) -> List[Any]:
             lasso.fit(A, y_tilda)
             x = lasso.coef_
 
+            lasso1 = Lasso()
+            lasso1.fit(A, np.log(y_tilda+1e-12))
+            x = lasso1.coef_
+
             mse = np.sqrt(mean_squared_error(x, x_true))/np.linalg.norm(x_true)
             mse_arr[i].append(mse)
     return mse_arr
@@ -87,6 +91,10 @@ def simulate_without_corrections(sigma) -> List[Any]:
             lasso.fit(A, y)
             x = lasso.coef_
 
+            # lasso1 = Lasso()
+            # lasso1.fit(A, np.log(y+1e-12))
+            # x = lasso1.coef_
+            # print(x)
             mse = np.sqrt(mean_squared_error(x, x_true))/np.linalg.norm(x_true)
             mse_arr[i].append(mse)
     return mse_arr
@@ -96,6 +104,7 @@ if __name__ == "__main__":
     for sigma in sigma_arr:
         mse = simulate(sigma)
         plot_mse(mse, f"initial_sims_with_correction_{sigma}.png")
+        print(mse)
         mse = simulate_without_corrections(sigma)
         plot_mse(mse, f"initial_sims_without_correction_{sigma}.png")
 
