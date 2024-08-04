@@ -15,26 +15,36 @@ q = 1
 z_mean = 0
 sparsity_arr = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.75]
 A_size_arr = [100, 150, 200, 250, 300, 350, 400]
-sigma_arr = [4]
+sigma_arr = [1, 2, 3, 4]
 lambda_values = np.logspace(-4, 0, 50)
 
 
-def plot_mse(mse: List[Any], file_name) -> None:
-    fig, ax = plt.subplots()
-    cax = ax.matshow(mse, cmap='viridis')
-    fig.colorbar(cax)
+def plot_mse_side_by_side(mse1: List[Any], mse2: List[Any], file_name: str) -> None:
+    fig, axs = plt.subplots(1, 2, figsize=(12, 6))
     
-    ax.set_xticks(np.arange(len(sparsity_arr)))
-    ax.set_xticklabels([str(s) for s in sparsity_arr])
-    ax.set_xlabel('Sparsity')
-
-    ax.set_yticks(np.arange(len(A_size_arr)))
-    ax.set_yticklabels([str(a) for a in A_size_arr])
-    ax.set_ylabel('A Size')
+    vmin = min(np.min(mse1), np.min(mse2))
+    vmax = max(np.max(mse1), np.max(mse2))
     
-    plt.title('MSE vs Sparsity and A Size')
+    cax1 = axs[0].matshow(mse1, cmap='viridis', vmin=vmin, vmax=vmax)
+    cax2 = axs[1].matshow(mse2, cmap='viridis', vmin=vmin, vmax=vmax)
+    
+    fig.colorbar(cax1, ax=axs[0])
+    fig.colorbar(cax2, ax=axs[1])
+    
+    for ax in axs:
+        ax.set_xticks(np.arange(len(sparsity_arr)))
+        ax.set_xticklabels([str(s) for s in sparsity_arr])
+        ax.set_xlabel('Sparsity')
+        ax.set_yticks(np.arange(len(A_size_arr)))
+        ax.set_yticklabels([str(a) for a in A_size_arr])
+        ax.set_ylabel('A Size')
+    
+    axs[0].set_title('With Correction')
+    axs[1].set_title('Without Correction')
+    
+    plt.suptitle('MSE Comparison')
     plt.savefig(file_name)
-
+    # plt.show()
 
 def simulate(sigma) -> List[Any]:
     mse_arr = []
@@ -120,9 +130,6 @@ def simulate_without_corrections(sigma) -> List[Any]:
 if __name__ == "__main__":
     print("Hi")
     for sigma in sigma_arr:
-        mse = simulate(sigma)
-        plot_mse(mse, f"initial_sims_with_correction_{sigma}.png")
-        # print(mse)
-        mse = simulate_without_corrections(sigma)
-        plot_mse(mse, f"initial_sims_without_correction_{sigma}.png")
-
+        mse1 = simulate(sigma)
+        mse2 = simulate_without_corrections(sigma)
+        plot_mse_side_by_side(mse1, mse2, f"sigma_{sigma}.png")
